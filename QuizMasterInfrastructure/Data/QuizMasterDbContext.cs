@@ -10,16 +10,17 @@ namespace QuizMasterInfrastructure.Data
 {
     public class QuizMasterDbContext : IdentityDbContext<ApplicationUser>
     {
-        public QuizMasterDbContext(DbContextOptions<QuizMasterDbContext> options) : base(options)
-        {
-        }
+        
         public DbSet<Quiz> Quizzes { get; set; } = null!;
         public DbSet<Question> Questions { get; set; } = null!;
         public DbSet<AnswerOption> AnswerOptions { get; set; } = null!;
         public DbSet<QuizAttempt> QuizAttempts { get; set; } = null!;
         public DbSet<StudentAnswer> StudentAnswers { get; set; } = null!;
         public DbSet<QuizResult> QuizResults { get; set; } = null!;
-    
+        
+        public QuizMasterDbContext(DbContextOptions<QuizMasterDbContext> options) : base(options)
+        {
+        }
         protected override void OnModelCreating (ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

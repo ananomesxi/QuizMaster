@@ -6,6 +6,9 @@ using QuizMasterDomain.Interfaces;
 
 namespace QuizMasterWeb.Controllers
 {
+    /// <summary>
+    /// მართავს ქვიზების კითხვების API მოთხოვნებს.
+    /// </summary>
     [ApiController]
     [Route("api")]
     public class QuestionsController : ControllerBase            
@@ -16,6 +19,11 @@ namespace QuizMasterWeb.Controllers
             _questionService = questionService;
         }
 
+        /// <summary>
+        /// აბრუნებს ქვიზის კითხვებს მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="quizId">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpGet("quizzes/{quizId:int}/questions")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<ICollection<QuestionDto>>> GetQuestionsByQuizId(int quizId, CancellationToken cancellationToken)
@@ -24,6 +32,12 @@ namespace QuizMasterWeb.Controllers
             return Ok(questions);
         }
 
+        /// <summary>
+        /// ამატებს ახალ კითხვას ქვიზში მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="quizId">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="dto">შესაქმნელი კითხვის მონაცემები.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpPost("quizzes/{quizId:int}/questions")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<QuestionDto>> AddQuestion(int quizId, [FromBody] CreateQuestionDto dto, CancellationToken cancellationToken)
@@ -32,6 +46,11 @@ namespace QuizMasterWeb.Controllers
             return Created($"/api/questions/{question.Id}", question);
         }
 
+        /// <summary>
+        /// აბრუნებს კითხვის დეტალებს მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="id">კითხვის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpGet("questions/{id:int}")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<QuestionDto>> GetQuestionById(int id, CancellationToken cancellationToken)
@@ -40,6 +59,12 @@ namespace QuizMasterWeb.Controllers
             return Ok(question);
         }
 
+        /// <summary>
+        /// აახლებს მითითებული კითხვის მონაცემებს.
+        /// </summary>
+        /// <param name="id">კითხვის იდენტიფიკატორი.</param>
+        /// <param name="dto">კითხვის განახლებული მონაცემები.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpPut("questions/{id:int}")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<QuestionDto>> UpdateQuestion(int id, [FromBody] UpdateQuestionDto dto, CancellationToken cancellationToken)
@@ -49,6 +74,11 @@ namespace QuizMasterWeb.Controllers
             return Ok(updatedQuestion);
         }
 
+        /// <summary>
+        /// შლის მითითებულ კითხვას.
+        /// </summary>
+        /// <param name="id">კითხვის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpDelete("questions/{id:int}")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<IActionResult> DeleteQuestion(int id, CancellationToken cancellationToken)

@@ -1,11 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuizMasterApplication.Services.Interfaces;
 using QuizMasterDomain.DTOs.UserDtos;
 using System.Security.Claims;
 
 namespace QuizMasterWeb.Controllers
 {
+    /// <summary>
+    /// მართავს მომხმარებლის პროფილისა და პაროლის API მოთხოვნებს.
+    /// </summary>
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
@@ -15,6 +20,10 @@ namespace QuizMasterWeb.Controllers
             _accountService = accountService;
         }
 
+        /// <summary>
+        /// აბრუნებს ავტორიზებული მომხმარებლის პროფილს.
+        /// </summary>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpGet("me")]
         public async Task<ActionResult<UserProfileDto>> GetMyProfile(CancellationToken cancellationToken)
         {
@@ -31,6 +40,11 @@ namespace QuizMasterWeb.Controllers
             return Ok(profile);
         }
 
+        /// <summary>
+        /// აახლებს ავტორიზებული მომხმარებლის პროფილის მონაცემებს.
+        /// </summary>
+        /// <param name="updateDto">პროფილის განახლებული მონაცემები.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpPut("me")]
         public async Task<ActionResult<UserProfileDto>> UpdateMyProfile([FromBody] UpdateProfileDto updateDto, CancellationToken cancellationToken)
         {
@@ -47,6 +61,11 @@ namespace QuizMasterWeb.Controllers
             return Ok(profile);
         }
 
+        /// <summary>
+        /// ცვლის ავტორიზებული მომხმარებლის პაროლს.
+        /// </summary>
+        /// <param name="dto">მიმდინარე და ახალი პაროლები.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword(
             ChangePasswordDto dto,

@@ -6,6 +6,9 @@ using QuizMasterDomain.DTOs.QuizDtos;
 using QuizMasterDomain.DTOs.QuizResultDtos;
 namespace QuizMasterWeb.Controllers
 {
+    /// <summary>
+    /// მართავს ქვიზების, ლიდერბორდისა და სტატისტიკის API მოთხოვნებს.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class QuizzesController : ControllerBase
@@ -17,12 +20,22 @@ namespace QuizMasterWeb.Controllers
             _quizService = quizService;
             _quizResultService = quizResultService;
         }
+
+        /// <summary>
+        /// აბრუნებს გამოქვეყნებულ ქვიზებს.
+        /// </summary>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpGet("published")]
         public async Task<ActionResult<ICollection<QuizDto>>> GetPublishedQuizzes(CancellationToken cancellationToken)
         {
             var quizzes = await _quizService.GetPublishedQuizzesAsync(cancellationToken);
             return Ok(quizzes);
         }
+
+        /// <summary>
+        /// აბრუნებს ყველა ქვიზს.
+        /// </summary>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpGet]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<ICollection<QuizDto>>> GetAllQuizzes(CancellationToken cancellationToken)
@@ -30,6 +43,12 @@ namespace QuizMasterWeb.Controllers
             var quizzes = await _quizService.GetAllQuizzesAsync(cancellationToken);
             return Ok(quizzes);
         }
+
+        /// <summary>
+        /// აბრუნებს ქვიზის დეტალებს მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="id">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpGet("{id:int}")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<QuizDto>> GetQuizById (int id, CancellationToken cancellationToken)
@@ -41,6 +60,12 @@ namespace QuizMasterWeb.Controllers
             }
             return Ok(quiz);
         }
+
+        /// <summary>
+        /// ამატებს ახალ ქვიზს.
+        /// </summary>
+        /// <param name="dto">ქვიზის მონაცემები.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpPost]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<QuizDto>> CreateQuiz([FromBody] CreateQuizDto dto, CancellationToken cancellationToken)
@@ -49,6 +74,12 @@ namespace QuizMasterWeb.Controllers
             return CreatedAtAction(nameof(GetQuizById), new { id = quiz.Id }, quiz);
         }
 
+        /// <summary>
+        /// აახლებს ქვიზის დეტალებს მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="id">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="dto">ქვიზის განახლებული მონაცემები.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpPut("{id:int}")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<QuizDto>> UpdateQuiz(int id, [FromBody] UpdateQuizDto dto, CancellationToken cancellationToken)
@@ -60,9 +91,14 @@ namespace QuizMasterWeb.Controllers
             return Ok(updatedQuiz);
         }
 
+        /// <summary>
+        /// შლის ქვიზს მისი ID-ის მიხედვით, თუ მას არ აქვს მცდელობების ისტორია.
+        /// </summary>
+        /// <param name="id">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Lecturer,Admin")]
-        public async Task<IActionResult> DeleteQUiz (int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteQuiz (int id, CancellationToken cancellationToken)
         {
             var quiz = await _quizService.GetQuizByIdAsync(id, cancellationToken);
             if (quiz == null)
@@ -76,6 +112,13 @@ namespace QuizMasterWeb.Controllers
             }
             return NoContent();
         }
+
+
+        /// <summary>
+        /// აქვეყნებს ქვიზს მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="id">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpPatch("{id:int}/publish")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<IActionResult> PublishQuiz(int id, CancellationToken cancellationToken)
@@ -87,6 +130,12 @@ namespace QuizMasterWeb.Controllers
             }
             return NoContent();
         }
+
+        /// <summary>
+        /// აუქმებს ქვიზის გამოქვეყნებას მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="id">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpPatch("{id:int}/unpublish")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<IActionResult> UnpublishQuiz(int id, CancellationToken cancellationToken)
@@ -99,6 +148,12 @@ namespace QuizMasterWeb.Controllers
             return NoContent();
         }
 
+
+        /// <summary>
+        /// აბრუნებს ქვიზის ლიდერბორდს მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="quizId">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpGet("{quizId:int}/leaderboard")]
         [Authorize(Roles = "Student,Lecturer,Admin")]
         public async Task<ActionResult<ICollection<LeaderboardEntryDto>>> GetLeaderboard(int quizId, CancellationToken cancellationToken)
@@ -106,6 +161,12 @@ namespace QuizMasterWeb.Controllers
             var leaderboard = await _quizResultService.GetLeaderboardResultsByQuizIdAsync(quizId, cancellationToken);
             return Ok(leaderboard);
         }
+
+        /// <summary>
+        /// აბრუნებს ქვიზის სტატისტიკას მისი ID-ის მიხედვით.
+        /// </summary>
+        /// <param name="quizId">ქვიზის იდენტიფიკატორი.</param>
+        /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
         [HttpGet("{quizId:int}/statistics")]
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<QuizStatisticsDto>> GetStatistics(int quizId, CancellationToken cancellationToken)

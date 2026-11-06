@@ -58,8 +58,7 @@ namespace QuizMasterApplication.Services.Implementations
             return await MapToProfileDtoAsync(user);
         }
 
-        private async Task<UserProfileDto> MapToProfileDtoAsync(
-            ApplicationUser user)
+        private async Task<UserProfileDto> MapToProfileDtoAsync(ApplicationUser user)
         {
             var roles = await _userManager.GetRolesAsync(user);
 

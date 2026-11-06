@@ -76,8 +76,7 @@ namespace QuizMasterApplication.Services.Implementations
             {
                 throw new KeyNotFoundException($"Answer option with ID {id} not found.");
             }
-            var question = await _questionRepository.GetByIdAsync(
-        option.QuestionId, cancellationToken);
+            var question = await _questionRepository.GetByIdAsync(option.QuestionId, cancellationToken);
 
             if (question == null)
             {
@@ -85,8 +84,7 @@ namespace QuizMasterApplication.Services.Implementations
                     $"Question with ID {option.QuestionId} not found.");
             }
 
-            var quiz = await _quizRepository.GetByIdAsync(
-                question.QuizId, cancellationToken);
+            var quiz = await _quizRepository.GetByIdAsync(question.QuizId, cancellationToken);
 
             if (quiz == null)
             {
@@ -107,8 +105,7 @@ namespace QuizMasterApplication.Services.Implementations
             {
                 throw new KeyNotFoundException($"Answer option with ID {id} not found.");
             }
-            var question = await _questionRepository.GetByIdAsync(
-        option.QuestionId, cancellationToken);
+            var question = await _questionRepository.GetByIdAsync(option.QuestionId, cancellationToken);
 
             if (question == null)
             {
