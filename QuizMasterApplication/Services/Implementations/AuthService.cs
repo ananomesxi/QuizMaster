@@ -17,9 +17,7 @@ namespace QuizMasterApplication.Services.Implementations
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
 
-        public AuthService(
-            UserManager<ApplicationUser> userManager,
-            IConfiguration configuration)
+        public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
         {
             _userManager = userManager;
             _configuration = configuration;
@@ -76,5 +74,7 @@ namespace QuizMasterApplication.Services.Implementations
                 ExpiresAtUtc = expiresAt
             };
         } 
+
+
     }
 }

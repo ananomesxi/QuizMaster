@@ -15,5 +15,6 @@ namespace QuizMasterDomain.DTOs.QuestionDtos
         public int Points { get; set; }
         [EnumDataType(typeof(QuestionType))]
         public QuestionType Type { get; set; }
+        public bool? TrueFalseAnswer { get; set; }
     }
 }

@@ -13,7 +13,7 @@ namespace QuizMasterApplication.Services.Interfaces
         Task<ICollection<QuizDto>> GetAllQuizzesAsync(CancellationToken cancellationToken);
 
         Task<QuizDto?> GetQuizByIdAsync(int id, CancellationToken cancellationToken);
-        Task<QuizDto> AddQuizAsync(CreateQuizDto createQuizDto, CancellationToken cancellationToken);
+        Task<QuizDto> AddQuizAsync(CreateQuizDto createQuizDto, CancellationToken cancellationToken, string? createdById = null);
         Task<QuizDto?> UpdateQuizAsync(int id, UpdateQuizDto updateQuizDto, CancellationToken cancellationToken);
         Task<bool> DeleteQuizAsync(int id, CancellationToken cancellationToken);
         Task<bool> PublishQuizAsync(int id, CancellationToken cancellationToken);

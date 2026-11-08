@@ -11,5 +11,7 @@ namespace QuizMasterDomain.DTOs.QuizAttemptDtos
         public int QuizId { get; set; }
         public DateTime StartedAt { get; set; }
         public QuizAttemptStatus Status { get; set; }
+        public int AnsweredQuestions { get; set; }
+        public int TotalQuestions { get; set; }
     }
 }

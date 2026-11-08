@@ -59,7 +59,9 @@ namespace QuizMasterApplication.Services.Implementations
                 Id = attempt.Id,
                 QuizId = attempt.QuizId,
                 StartedAt = attempt.StartedAt,
-                Status = attempt.Status
+                Status = attempt.Status,
+                AnsweredQuestions = 0,
+                TotalQuestions = quiz.Questions.Count
             };
         }
         public async Task<ICollection<AttemptQuestionDto>> GetQuestionsForAttemptAsync(int attemptId, string studentId, CancellationToken cancellationToken)
@@ -227,14 +229,18 @@ namespace QuizMasterApplication.Services.Implementations
                 MaxScore = result.MaxScore
             };
         }
-        public async Task<ICollection<QuizAttemptDto>> GetMyAttemptsAsync(string studentId, CancellationToken cancellationToken)
+        public async Task<ICollection<QuizAttemptDto>> GetMyAttemptsAsync( string studentId, CancellationToken cancellationToken)
         {
-            var attempts = await _quizAttemptRepository.GetByUserIdAsync(studentId, cancellationToken);
-            return attempts.Select(attempt => new QuizAttemptDto {
+            var attempts = await _quizAttemptRepository.GetByUserIdAsync( studentId, cancellationToken);
+
+            return attempts.Select(attempt => new QuizAttemptDto
+            {
                 Id = attempt.Id,
                 QuizId = attempt.QuizId,
                 StartedAt = attempt.StartedAt,
-                Status = attempt.Status
+                Status = attempt.Status,
+                AnsweredQuestions = attempt.StudentAnswers.Select(answer => answer.QuestionId).Distinct().Count(),
+                TotalQuestions = attempt.Quiz.Questions.Count
             }).ToList();
         }
     }

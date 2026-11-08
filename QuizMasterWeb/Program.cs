@@ -14,6 +14,9 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.OpenApi;
 using QuizMasterWeb.Middlewares;
+using QuizMasterInfrastructure.FileStorage;
+using Microsoft.Extensions.FileProviders;
+
 namespace QuizMasterWeb
 {
     public class Program
@@ -85,10 +88,9 @@ namespace QuizMasterWeb
             .AddEntityFrameworkStores<QuizMasterDbContext>()
             .AddDefaultTokenProviders();
 
-            builder.Services.Configure<IdentityOptions>(options => //for email confirmation token
+            builder.Services.Configure<IdentityOptions>(options => // for email confirmation
             {
-                options.Tokens.EmailConfirmationTokenProvider =
-                    TokenOptions.DefaultEmailProvider;
+                options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
             });
 
             // jwt 
@@ -116,11 +118,31 @@ namespace QuizMasterWeb
                 });
             builder.Services.AddAuthorization();
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder
+                => builder.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                );
+            });
+
+            //file storage service
+            var webRootPath = builder.Environment.WebRootPath?? Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+
+            Directory.CreateDirectory(webRootPath);
+
+            builder.Environment.WebRootPath = webRootPath;
+            builder.Environment.WebRootFileProvider = new PhysicalFileProvider(webRootPath);
+
+            builder.Services.AddSingleton<IFileStorageService>( new LocalFileStorageService(webRootPath));
+
             var app = builder.Build();
+
             app.UseMiddleware<ExceptionHandlingMiddleware>();
+
             await IdentitySeeder.SeedRolesAsync(app.Services);
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
@@ -129,9 +151,14 @@ namespace QuizMasterWeb
             }
 
             app.UseHttpsRedirection();
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+            app.UseRouting();
+
+            app.UseCors("AllowAll");
+
             app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 

@@ -6,6 +6,7 @@ using QuizMasterDomain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using QuizMasterDomain.Enums;
 
 namespace QuizMasterApplication.Services.Implementations
 {
@@ -36,16 +37,29 @@ namespace QuizMasterApplication.Services.Implementations
             }
             return MapToDto(quiz);
         }
-        public async Task<QuizDto> AddQuizAsync(CreateQuizDto createQuizDto, CancellationToken cancellationToken)
+        public async Task<QuizDto> AddQuizAsync(CreateQuizDto createQuizDto, CancellationToken cancellationToken, string? createdById = null)
         {
+            if (createdById != null && string.IsNullOrWhiteSpace(createdById))
+            {
+                throw new ArgumentException("Creator ID cannot be empty.");
+            } 
             var quiz = new Quiz
             {
                 Title = createQuizDto.Title,
                 TimeLimitMinutes = createQuizDto.TimeLimitMinutes,
-                IsPublished = false
-            };
+                IsPublished = false,
+                CreatedById = createdById
+            }; 
             await _quizRepository.AddAsync(quiz, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken); 
+            if (createdById != null)
+            {
+                var savedQuiz = await _quizRepository.GetByIdAsync( quiz.Id, cancellationToken); 
+                if (savedQuiz != null)
+                {
+                    return MapToDto(savedQuiz);
+                }
+            } 
             return MapToDto(quiz);
         }
         public async Task<QuizDto> UpdateQuizAsync(int id, UpdateQuizDto updateQuizDto, CancellationToken cancellationToken)
@@ -78,14 +92,29 @@ namespace QuizMasterApplication.Services.Implementations
         }
         public async Task<bool> PublishQuizAsync(int id, CancellationToken cancellationToken)
         {
-            var quiz = await _quizRepository.GetByIdAsync(id, cancellationToken);
+            var quiz = await _quizRepository.GetByIdAsync( id, cancellationToken); 
             if (quiz == null)
             {
-                throw new KeyNotFoundException($"Quiz with ID {id} not found.");
-            }
-            quiz.IsPublished = true;
-            _quizRepository.Update(quiz);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+                throw new KeyNotFoundException( $"Quiz with ID {id} not found.");
+            } 
+            foreach (var question in quiz.Questions)
+            {
+                if (question.Type != QuestionType.TrueFalse)
+                {
+                    continue;
+                } 
+                var options = question.AnswerOptions; 
+                var hasTrue = options.Any(option => option.Text == "True");
+                var hasFalse = options.Any(option => option.Text == "False");
+                var correctCount = options.Count(option => option.IsCorrect); 
+                if (options.Count != 2 || !hasTrue || !hasFalse || correctCount != 1)
+                {
+                    throw new InvalidOperationException( $"True/False question with ID {question.Id} " + "must have exactly two options, True and False, " + "with exactly one correct answer.");
+                }
+            } 
+            quiz.IsPublished = true; 
+            _quizRepository.Update(quiz); 
+            await _unitOfWork.SaveChangesAsync(cancellationToken); 
             return true;
         }
         public async Task<bool> UnpublishQuizAsync(int id, CancellationToken cancellationToken)
@@ -112,7 +141,10 @@ namespace QuizMasterApplication.Services.Implementations
                 Id = quiz.Id,
                 Title = quiz.Title,
                 TimeLimitMinutes = quiz.TimeLimitMinutes,
-                IsPublished = quiz.IsPublished
+                IsPublished = quiz.IsPublished,
+                CreatedById = quiz.CreatedById,
+                CreatedByUserName = quiz.CreatedBy?.UserName,
+                CreatedByProfileImageUrl = quiz.CreatedBy?.ProfileImageUrl
             };
         }
     }

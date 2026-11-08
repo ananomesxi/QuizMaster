@@ -8,5 +8,6 @@ namespace QuizMasterApplication.Services.Interfaces
     public interface IAuthService
     {
         Task<AuthResponseDto> LoginUserAsync(LoginDto dto, CancellationToken cancellationToken = default);
+        
     }
 }

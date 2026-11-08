@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using QuizMasterDomain.Identity;
 
 namespace QuizMasterDomain.Entities
 {
@@ -38,7 +39,8 @@ namespace QuizMasterDomain.Entities
         }
         public bool IsPublished { get; set; }
         public ICollection<Question> Questions { get; set; } = new List<Question>(); // Navigation property to Question entity>
-        
+        public string? CreatedById { get; set; }
+        public ApplicationUser? CreatedBy { get; set; }
 
     }
 }

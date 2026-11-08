@@ -4,6 +4,8 @@ using QuizMasterApplication.Services.Interfaces;
 using QuizMasterDomain.DTOs.Quiz;
 using QuizMasterDomain.DTOs.QuizDtos;
 using QuizMasterDomain.DTOs.QuizResultDtos;
+using System.Security.Claims;
+
 namespace QuizMasterWeb.Controllers
 {
     /// <summary>
@@ -62,7 +64,7 @@ namespace QuizMasterWeb.Controllers
         }
 
         /// <summary>
-        /// ამატებს ახალ ქვიზს.
+        /// ამატებს ახალ ქვიზს და მის შემქმნელად ინახავს ავტორიზებულ ლექტორს/ადმინს.
         /// </summary>
         /// <param name="dto">ქვიზის მონაცემები.</param>
         /// <param name="cancellationToken">ტოკენი მოთხოვნის გაუქმებისთვის.</param>
@@ -70,8 +72,13 @@ namespace QuizMasterWeb.Controllers
         [Authorize(Roles = "Lecturer,Admin")]
         public async Task<ActionResult<QuizDto>> CreateQuiz([FromBody] CreateQuizDto dto, CancellationToken cancellationToken)
         {
-            var quiz = await _quizService.AddQuizAsync(dto, cancellationToken);
-            return CreatedAtAction(nameof(GetQuizById), new { id = quiz.Id }, quiz);
+            var creatorIdClaim = User.FindFirst( ClaimTypes.NameIdentifier);
+            if (creatorIdClaim == null || string.IsNullOrWhiteSpace(creatorIdClaim.Value))
+            {
+                return Unauthorized();
+            }
+            var quiz = await _quizService.AddQuizAsync( dto, cancellationToken, creatorIdClaim.Value);
+            return CreatedAtAction( nameof(GetQuizById), new { id = quiz.Id }, quiz);
         }
 
         /// <summary>

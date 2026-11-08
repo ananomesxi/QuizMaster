@@ -9,5 +9,6 @@ namespace QuizMasterDomain.DTOs.UserDtos
         public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public ICollection<string> Roles { get; set; } = new List<string>();
+        public string? ProfileImageUrl { get; set; }
     }
 }

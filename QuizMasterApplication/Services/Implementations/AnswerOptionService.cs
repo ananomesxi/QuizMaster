@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.AccessControl;
 using System.Text;
+using QuizMasterDomain.Enums;
 
 namespace QuizMasterApplication.Services.Implementations
 {
@@ -59,6 +60,7 @@ namespace QuizMasterApplication.Services.Implementations
                 throw new KeyNotFoundException($"Quiz with ID {question.QuizId} not found.");
             }
             await EnsureQuizIsEditableAsync(quiz, cancellationToken);
+            EnsureNotTrueFalse(question);
             var option = new AnswerOption
             {
                 QuestionId = questionId,
@@ -92,6 +94,7 @@ namespace QuizMasterApplication.Services.Implementations
             }
 
             await EnsureQuizIsEditableAsync(quiz, cancellationToken);
+            EnsureNotTrueFalse(question);
             option.Text = updateAnswerOptionDto.Text;
             option.IsCorrect = updateAnswerOptionDto.IsCorrect;
             _answerOptionRepository.Update(option);
@@ -122,6 +125,7 @@ namespace QuizMasterApplication.Services.Implementations
             }
 
             await EnsureQuizIsEditableAsync(quiz, cancellationToken);
+            EnsureNotTrueFalse(question);
             _answerOptionRepository.Delete(option);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
@@ -148,6 +152,14 @@ namespace QuizMasterApplication.Services.Implementations
                 throw new InvalidOperationException( "You can't change quiz content after an attempt has started.");
             }
         }
-
+        private static void EnsureNotTrueFalse(Question question)
+        {
+            if (question.Type == QuestionType.TrueFalse)
+            {
+                throw new InvalidOperationException(
+                    "True/False answer options are fixed. " +
+                    "Edit the question to change the correct answer.");
+            }
+        }
     }
 }

@@ -25,4 +25,8 @@
     <ProjectReference Include="..\QuizMasterInfrastructure\QuizMasterInfrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

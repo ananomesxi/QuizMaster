@@ -24,10 +24,14 @@ namespace QuizMasterInfrastructure.Repositories
         {
             return await _context.QuizAttempts.FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
         }
-        public async Task<ICollection<QuizAttempt>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+        public async Task<ICollection<QuizAttempt>> GetByUserIdAsync( string userId, CancellationToken cancellationToken = default)
         {
             return await _context.QuizAttempts
-                .Where(q => q.UserId == userId)
+                .Where(attempt => attempt.UserId == userId)
+                .Include(attempt => attempt.StudentAnswers)
+                .Include(attempt => attempt.Quiz)
+                    .ThenInclude(quiz => quiz.Questions)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);
         }
         public async Task AddAsync(QuizAttempt quizAttempt, CancellationToken cancellationToken = default)

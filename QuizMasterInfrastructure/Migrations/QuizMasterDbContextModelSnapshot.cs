@@ -221,6 +221,9 @@ namespace QuizMasterInfrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CreatedById")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
@@ -233,6 +236,8 @@ namespace QuizMasterInfrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
 
                     b.ToTable("Quizzes", t =>
                         {
@@ -375,6 +380,10 @@ namespace QuizMasterInfrastructure.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ProfileImageUrl")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -471,6 +480,16 @@ namespace QuizMasterInfrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("QuizMasterDomain.Entities.Quiz", b =>
+                {
+                    b.HasOne("QuizMasterDomain.Identity.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("QuizMasterDomain.Entities.QuizAttempt", b =>

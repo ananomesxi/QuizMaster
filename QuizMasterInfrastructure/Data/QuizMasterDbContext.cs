@@ -79,6 +79,13 @@ namespace QuizMasterInfrastructure.Data
             .HasForeignKey(attempt => attempt.QuizId)
             .OnDelete(DeleteBehavior.NoAction);
 
+            // Quiz and CreatedBy (ApplicationUser)
+            modelBuilder.Entity<Quiz>()
+            .HasOne(quiz => quiz.CreatedBy)
+            .WithMany()
+            .HasForeignKey(quiz => quiz.CreatedById)
+            .OnDelete(DeleteBehavior.NoAction);
+
             // ვალიდაციები:
 
             modelBuilder.Entity<Quiz>(entity =>

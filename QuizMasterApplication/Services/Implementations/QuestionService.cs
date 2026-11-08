@@ -5,6 +5,7 @@ using QuizMasterDomain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using QuizMasterDomain.Enums;
 
 namespace QuizMasterApplication.Services.Implementations
 {
@@ -58,29 +59,39 @@ namespace QuizMasterApplication.Services.Implementations
                 Points = createQuestionDto.Points,
                 Type = createQuestionDto.Type
             };
+            if (question.Type == QuestionType.TrueFalse)
+            {
+                SetTrueFalseOptions(question, createQuestionDto.TrueFalseAnswer);
+            }
             await _questionRepository.AddAsync(question, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return MapToDto(question);
         }
-        public async Task<QuestionDto> UpdateQuestionAsync(int id, UpdateQuestionDto updateQuestionDto, CancellationToken cancellationToken)
+        public async Task<QuestionDto> UpdateQuestionAsync( int id, UpdateQuestionDto updateQuestionDto, CancellationToken cancellationToken)
         {
-
-            var question = await _questionRepository.GetByIdAsync(id, cancellationToken);
+            var question = await _questionRepository.GetByIdAsync( id, cancellationToken);
             if (question == null)
             {
-                throw new KeyNotFoundException($"Question with ID {id} not found.");
+                throw new KeyNotFoundException( $"Question with ID {id} not found.");
             }
-            var quiz = await _quizRepository.GetByIdAsync(question.QuizId, cancellationToken);
-
+            var quiz = await _quizRepository.GetByIdAsync( question.QuizId, cancellationToken);
             if (quiz == null)
             {
-                throw new KeyNotFoundException($"Quiz with ID {question.QuizId} not found.");
+                throw new KeyNotFoundException( $"Quiz with ID {question.QuizId} not found.");
             }
-
             await EnsureQuizIsEditableAsync(quiz, cancellationToken);
+            var previousType = question.Type;
             question.Text = updateQuestionDto.Text;
             question.Points = updateQuestionDto.Points;
             question.Type = updateQuestionDto.Type;
+            if (question.Type == QuestionType.TrueFalse)
+            {
+                if (previousType != QuestionType.TrueFalse)
+                {
+                    question.AnswerOptions.Clear();
+                }
+                SetTrueFalseOptions( question, updateQuestionDto.TrueFalseAnswer);
+            }
             _questionRepository.Update(question);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return MapToDto(question);
@@ -125,6 +136,45 @@ namespace QuizMasterApplication.Services.Implementations
             {
                 throw new InvalidOperationException("You can't change quiz content after an attempt has started.");
             }
+        }
+        private static void SetTrueFalseOptions( Question question, bool? correctAnswer)
+        {
+            if (!correctAnswer.HasValue)
+            {
+                throw new ArgumentException(
+                    "Choose True or False as the correct answer.");
+            }
+
+            var trueOption = question.AnswerOptions
+                .FirstOrDefault(option => option.Text == "True");
+
+            var falseOption = question.AnswerOptions
+                .FirstOrDefault(option => option.Text == "False");
+
+            if (question.AnswerOptions.Count != 2
+                || trueOption == null
+                || falseOption == null)
+            {
+                question.AnswerOptions.Clear();
+
+                trueOption = new AnswerOption
+                {
+                    Text = "True",
+                    Question = question
+                };
+
+                falseOption = new AnswerOption
+                {
+                    Text = "False",
+                    Question = question
+                };
+
+                question.AnswerOptions.Add(trueOption);
+                question.AnswerOptions.Add(falseOption);
+            }
+
+            trueOption.IsCorrect = correctAnswer.Value;
+            falseOption.IsCorrect = !correctAnswer.Value;
         }
     }
 }

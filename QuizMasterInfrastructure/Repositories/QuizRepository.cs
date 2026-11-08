@@ -18,16 +18,17 @@ namespace QuizMasterInfrastructure.Repositories
         }
 
 
-        public async Task<ICollection<Quiz>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<ICollection<Quiz>> GetAllAsync( CancellationToken cancellationToken = default)
         {
-            return await _context.Quizzes.ToListAsync(cancellationToken);
+            return await _context.Quizzes.Include(quiz => quiz.CreatedBy).ToListAsync(cancellationToken);
         }
-        public async Task<Quiz?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public async Task<Quiz?> GetByIdAsync( int id, CancellationToken cancellationToken = default)
         {
             return await _context.Quizzes
-                .Include(q => q.Questions)
-                .ThenInclude(q => q.AnswerOptions)
-                .FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
+                .Include(quiz => quiz.CreatedBy)
+                .Include(quiz => quiz.Questions)
+                .ThenInclude(question => question.AnswerOptions)
+                .FirstOrDefaultAsync( quiz => quiz.Id == id, cancellationToken);
         }
 
         public async Task AddAsync(Quiz quiz, CancellationToken cancellationToken = default)
@@ -45,10 +46,11 @@ namespace QuizMasterInfrastructure.Repositories
             _context.Quizzes.Remove(quiz);
         }
 
-        public async Task<ICollection<Quiz>> GetPublishedQuizzesAsync(CancellationToken cancellationToken = default)
+        public async Task<ICollection<Quiz>> GetPublishedQuizzesAsync( CancellationToken cancellationToken = default)
         {
             return await _context.Quizzes
-                .Where(q => q.IsPublished)
+                .Where(quiz => quiz.IsPublished)
+                .Include(quiz => quiz.CreatedBy)
                 .ToListAsync(cancellationToken);
         }
     }
