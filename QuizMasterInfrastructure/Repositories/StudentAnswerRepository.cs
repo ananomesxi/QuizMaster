@@ -25,8 +25,7 @@ namespace QuizMasterInfrastructure.Repositories
         }
         public async Task<ICollection<StudentAnswer>> GetByQuizAttemptIdAsync(int quizAttemptId, CancellationToken cancellationToken = default)
         {
-            return await _context.StudentAnswers
-                .Where(sa => sa.QuizAttemptId == quizAttemptId)
+            return await _context.StudentAnswers.Where(sa => sa.QuizAttemptId == quizAttemptId)
                 .ToListAsync(cancellationToken);
         }
         public async Task AddAsync(StudentAnswer studentAnswer, CancellationToken cancellationToken = default)

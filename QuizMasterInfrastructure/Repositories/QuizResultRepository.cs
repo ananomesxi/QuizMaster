@@ -45,16 +45,13 @@ namespace QuizMasterInfrastructure.Repositories
         public async Task<ICollection<QuizResult>> GetLeaderboardResultsByQuizIdAsync(int quizId, CancellationToken cancellationToken = default)
         {
             return  await _context.QuizResults.Where(result => result.QuizAttempt.QuizId == quizId)
-                .Include(result => result.QuizAttempt)
-                .ThenInclude(attempt => attempt.User)
+                .Include(result => result.QuizAttempt).ThenInclude(attempt => attempt.User)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<QuizStatisticsDto> GetQuizStatisticsAsync(int quizId, CancellationToken cancellationToken = default)
         {
-            var statistics = await _context.QuizResults
-                .Where(result => result.QuizAttempt.QuizId == quizId)
-                .GroupBy(result => result.QuizAttempt.QuizId)
+            var statistics = await _context.QuizResults.Where(result => result.QuizAttempt.QuizId == quizId).GroupBy(result => result.QuizAttempt.QuizId)
                 .Select(group => new QuizStatisticsDto
                 {
                     QuizId = group.Key,

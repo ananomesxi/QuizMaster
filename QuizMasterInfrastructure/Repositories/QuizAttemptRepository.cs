@@ -26,12 +26,8 @@ namespace QuizMasterInfrastructure.Repositories
         }
         public async Task<ICollection<QuizAttempt>> GetByUserIdAsync( string userId, CancellationToken cancellationToken = default)
         {
-            return await _context.QuizAttempts
-                .Where(attempt => attempt.UserId == userId)
-                .Include(attempt => attempt.StudentAnswers)
-                .Include(attempt => attempt.Quiz)
-                    .ThenInclude(quiz => quiz.Questions)
-                .AsSplitQuery()
+            return await _context.QuizAttempts.Where(attempt => attempt.UserId == userId).Include(attempt => attempt.StudentAnswers)
+                .Include(attempt => attempt.Quiz).ThenInclude(quiz => quiz.Questions).AsSplitQuery()
                 .ToListAsync(cancellationToken);
         }
         public async Task AddAsync(QuizAttempt quizAttempt, CancellationToken cancellationToken = default)
@@ -48,8 +44,7 @@ namespace QuizMasterInfrastructure.Repositories
         }
         public async Task<bool> HasAttemptsForQuizAsync(int quizId, CancellationToken cancellationToken = default)
         {
-            return await _context.QuizAttempts
-                .AnyAsync(q=> q.QuizId == quizId, cancellationToken);
+            return await _context.QuizAttempts.AnyAsync(q=> q.QuizId == quizId, cancellationToken);
         }
     }
 }
