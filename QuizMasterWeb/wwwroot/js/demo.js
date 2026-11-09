@@ -48,6 +48,17 @@ let results = [
   { quizAttemptId: 3, score: 5, maxScore: 5 }, { quizAttemptId: 4, score: 0, maxScore: 5 }
 ];
 const selections = new Map();
+// Preseeded completed results have scores but no saved option history. Keep
+// their answer counts unknown rather than inferring completion from a score.
+const historicalAttemptsWithoutSelections = new Set(attempts.filter(attempt => attempt.status === 1).map(attempt => attempt.id));
+function attemptWithProgress(attempt) {
+  const dto = copy(attempt);
+  if (historicalAttemptsWithoutSelections.has(attempt.id)) return dto;
+  const quizQuestions = questions.filter(question => question.quizId === attempt.quizId);
+  dto.totalQuestions = quizQuestions.length;
+  dto.answeredQuestions = quizQuestions.filter(question => (selections.get(`${attempt.id}:${question.id}`) || []).length > 0).length;
+  return dto;
+}
 const next = items => Math.max(0, ...items.map(item => item.id)) + 1;
 const get = (items, id, label) => items.find(item => item.id === Number(id)) ?? fail(`${label} was not found.`, 404);
 const requireRole = (...roles) => { if (!profile.roles.some(role => roles.includes(role))) fail('Your account does not have permission for this action.', 403); };
@@ -170,7 +181,7 @@ export const demoApi = {
   async addOption(questionId, dto) { const question = get(questions, questionId, 'Question'); editable(question.quizId); requireManualOptions(question); const option = { id: next(options), questionId: question.id, text: dto.text, isCorrect: Boolean(dto.isCorrect) }; options.push(option); return copy(option); },
   async updateOption(optionId, dto) { const option = get(options, optionId, 'Answer option'); const question = get(questions, option.questionId, 'Question'); editable(question.quizId); requireManualOptions(question); Object.assign(option, { text: dto.text, isCorrect: Boolean(dto.isCorrect) }); return copy(option); },
   async deleteOption(optionId) { const option = get(options, optionId, 'Answer option'); const question = get(questions, option.questionId, 'Question'); editable(question.quizId); requireManualOptions(question); options = options.filter(item => item.id !== option.id); return null; },
-  async startAttempt(quizId) { requireRole('Student'); const quiz = get(quizzes, quizId, 'Quiz'); if (!quiz.isPublished) fail('Quiz is not published.', 409); const attempt = { id: next(attempts), quizId: quiz.id, startedAt: new Date().toISOString(), status: 0 }; attempts.push(attempt); return copy(attempt); },
+  async startAttempt(quizId) { requireRole('Student'); const quiz = get(quizzes, quizId, 'Quiz'); if (!quiz.isPublished) fail('Quiz is not published.', 409); const attempt = { id: next(attempts), quizId: quiz.id, startedAt: new Date().toISOString(), status: 0 }; attempts.push(attempt); return attemptWithProgress(attempt); },
   async attemptQuestions(attemptId) { const attempt = activeAttempt(attemptId); return questions.filter(question => question.quizId === attempt.quizId).map(question => ({ id: question.id, text: question.text, type: question.type, answerOptions: options.filter(option => option.questionId === question.id).map(option => ({ id: option.id, text: option.text })) })); },
   async saveAnswer(attemptId, dto) {
     const attempt = activeAttempt(attemptId); const question = get(questions, dto.questionId, 'Question');
@@ -186,7 +197,7 @@ export const demoApi = {
     for (const question of quizQuestions) { const correct = options.filter(option => option.questionId === question.id && option.isCorrect).map(option => option.id).sort((a,b) => a-b); const selected = [...(selections.get(`${attempt.id}:${question.id}`) ?? [])].sort((a,b) => a-b); if (correct.length && JSON.stringify(correct) === JSON.stringify(selected)) result.score += question.points; }
     attempt.status = 1; results.push(result); return copy(result);
   },
-  async myAttempts() { requireRole('Student'); return copy(attempts); },
+  async myAttempts() { requireRole('Student'); return attempts.map(attemptWithProgress); },
   async leaderboard(quizId) {
     get(quizzes, quizId, 'Quiz');
     const maxScore = questions.filter(question => question.quizId === Number(quizId)).reduce((total, question) => total + question.points, 0);

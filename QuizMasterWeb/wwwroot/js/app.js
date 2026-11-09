@@ -38,7 +38,25 @@ const smallButton = (label, action, extra = '', style = 'secondary') => `<button
 const iconButton = (name, label, action, extra = '') => `<button type="button" class="icon-button" title="${e(label)}" aria-label="${e(label)}" data-action="${action}" ${extra}>${icon(name)}</button>`;
 const errorNotice = error => `<div class="notice" role="alert">${icon('info')}<div><strong>We couldn’t load this page.</strong><p>${e(error.message)}</p>${smallButton('Try again', 'reload')}</div></div>`;
 
+function setNavigationOpen(open, focus = false) {
+  const navigation = document.querySelector('#primary-navigation');
+  if (open && !navigation) return;
+  document.body.classList.toggle('menu-open', open);
+  const backdrop = document.querySelector('.topbar-nav-backdrop');
+  if (backdrop) backdrop.hidden = !open;
+  const main = document.querySelector('.main-content');
+  if (main) main.inert = open;
+  const toggle = document.querySelector('.topbar-mobile-toggle');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+    toggle.innerHTML = icon(open ? 'close' : 'menu');
+  }
+  if (focus && open) requestAnimationFrame(() => navigation.querySelector('a')?.focus());
+  else if (focus && toggle) toggle.focus();
+}
 function openModal(title, body) {
+  setNavigationOpen(false);
   modalVersion++;
   if (modal.open) modal.close();
   returnFocus = document.activeElement;
@@ -79,7 +97,8 @@ function renderAuth(mode = 'login') {
   state.profile = null; state.active = null;
   clearTimeout(expiryTimer);
   clearInterval(state.timer); state.timer = null;
-  document.body.classList.remove('menu-open');
+  setNavigationOpen(false);
+  document.body.classList.remove('layout-topnav', 'sidebar-collapsed');
   const verify = mode === 'verify';
   const register = mode === 'register';
   const title = verify ? 'Check your inbox.' : register ? 'Your next chapter starts here.' : 'Welcome back.';
@@ -114,9 +133,25 @@ async function submitAuth(event) {
 
 function renderShell() {
   const links = [['dashboard','home','Dashboard'],['quizzes','quiz','Quizzes'], ...(isStudent() ? [['attempts','attempts','My attempts']] : []), ['leaderboard','chart','Leaderboard'], ...(isStaff() ? [['manage','edit','Manage quizzes']] : []), ...(hasRole('Admin') ? [['admin','users','User roles']] : []), ['profile','user','Profile']];
-  let collapsed = false; try { collapsed = localStorage.getItem('quizmaster-sidebar') === 'collapsed'; } catch {}
-  document.body.classList.toggle('sidebar-collapsed', collapsed);
-  app.innerHTML = `<div class="app-shell"><button class="sidebar-backdrop" data-action="mobile-menu" aria-label="Close menu" hidden></button><aside class="sidebar" aria-label="Main navigation"><div class="sidebar-brand"><a class="brand" href="#dashboard"><span class="brand-mark">${icon('brand')}</span><span class="brand-name">QuizMaster</span></a><button class="icon-button sidebar-toggle" data-action="sidebar" aria-label="${collapsed ? 'Expand' : 'Collapse'} sidebar" aria-expanded="${!collapsed}" title="Toggle sidebar">${icon('left')}</button></div><nav class="nav-list">${links.map(([route,name,label])=>`<a class="nav-link" href="#${route}" data-route="${route}" title="${label}"><span class="nav-icon">${icon(name)}</span><span class="nav-label">${label}</span></a>`).join('')}</nav><div class="sidebar-footer"><div class="sidebar-tools">${themeButton()}${iconButton('settings', 'API connection', 'settings')}<span class="connection-pill"><span class="connection-dot"></span>${isDemo() ? 'Design demo' : 'Your workspace'}</span></div><div class="user-menu"><a href="#profile" class="user-avatar-link" aria-label="Open your profile">${avatar(state.profile)}</a><div class="user-info"><span class="user-name">${e(state.profile.userName)}</span><span class="user-role">${e(currentRole())}</span></div><button class="icon-button logout-button" data-action="logout" title="Log out" aria-label="Log out">${icon('logout')}</button></div></div></aside><main id="main-content" class="main-content" tabindex="-1"><div class="mobile-topbar"><button class="icon-button" data-action="mobile-menu" aria-label="Open navigation" aria-expanded="false">${icon('menu')}</button><a class="brand" href="#dashboard">QuizMaster</a>${themeButton()}</div>${isDemo() ? `<div class="demo-banner"><span>${icon('info')} <strong>Design demo</strong><span class="demo-description">Sample data. Changes stay in this preview.</span></span><div><label for="demo-role" class="sr-only">Preview as role</label><select id="demo-role" aria-label="Preview as role">${['Student','Lecturer','Admin'].map(role=>`<option ${hasRole(role)?'selected':''}>${role}</option>`).join('')}</select><button class="text-link" data-action="exit-demo">Connect my API ${icon('arrow')}</button></div></div>` : ''}<div id="page" class="page-content"></div></main></div>`;
+  document.body.classList.add('layout-topnav');
+  document.body.classList.remove('sidebar-collapsed', 'menu-open');
+  app.innerHTML = `<div class="app-shell">
+    <header class="topbar"><div class="topbar-inner">
+      <a class="brand topbar-brand" href="#dashboard"><span class="brand-mark">${icon('brand')}</span><span class="brand-name">QuizMaster</span></a>
+      <nav class="topbar-nav" id="primary-navigation" aria-label="Main navigation"><div class="nav-list">${links.map(([route,name,label]) => `<a class="nav-link" href="#${route}" data-route="${route}" title="${label}"><span class="nav-icon">${icon(name)}</span><span class="nav-label">${label}</span></a>`).join('')}</div></nav>
+      <div class="topbar-actions">
+        ${themeButton()}${iconButton('settings', 'API connection', 'settings')}
+        <a class="topbar-user" href="#profile" data-route="profile" aria-label="${e(`Open ${state.profile.userName}’s profile`)}">${avatar(state.profile)}<span class="topbar-user-info user-info"><span class="user-name">${e(state.profile.userName)}</span><span class="user-role">${e(currentRole())}</span></span></a>
+        <button class="icon-button logout-button" data-action="logout" type="button" title="Log out" aria-label="Log out">${icon('logout')}</button>
+        <button class="icon-button topbar-mobile-toggle" data-action="mobile-menu" type="button" aria-label="Open navigation" aria-controls="primary-navigation" aria-expanded="false">${icon('menu')}</button>
+      </div>
+    </div></header>
+    <button class="topbar-nav-backdrop" data-action="mobile-menu" type="button" aria-label="Close navigation" tabindex="-1" hidden></button>
+    <main id="main-content" class="main-content" tabindex="-1">
+      ${isDemo() ? `<div class="demo-banner"><span>${icon('info')} <strong>Design demo</strong><span class="demo-description">Sample data. Changes stay in this preview.</span></span><div><label for="demo-role" class="sr-only">Preview as role</label><select id="demo-role" aria-label="Preview as role">${['Student','Lecturer','Admin'].map(role=>`<option ${hasRole(role)?'selected':''}>${role}</option>`).join('')}</select><button class="text-link" data-action="exit-demo">Connect my API ${icon('arrow')}</button></div></div>` : ''}
+      <div id="page" class="page-content"></div>
+    </main>
+  </div>`;
 }
 function header(title, subtitle, actions = '', eyebrow = '') {
   return `<header class="page-header"><div>${eyebrow ? `<span class="eyebrow">${e(eyebrow)}</span>` : ''}<h1>${e(title)}</h1>${subtitle ? `<p class="subtitle">${e(subtitle)}</p>` : ''}</div><div class="header-actions">${actions}</div></header>`;
@@ -329,11 +364,26 @@ async function refreshData(version = state.routeVersion) {
 }
 function dashboard() {
   const published = state.quizzes.filter(q => q.isPublished);
-  const featured = published[0];
   const stats = isStudent() ? [stat('Published quizzes', published.length, 'stack'), stat('Your attempts', state.attempts.length, 'clipboard'), stat('Completed', state.attempts.filter(completed).length, 'attempts')] : [stat('All quizzes', state.quizzes.length, 'stack'), stat('Published', published.length, 'attempts'), stat('Drafts', state.quizzes.length-published.length, 'edit')];
-  document.querySelector('#page').innerHTML = `${header(`Hi, ${state.profile.userName}!`, isStudent() ? 'Ready for your next challenge?' : 'A little overview of your learning space.', `<span class="role-label">${e(currentRole())}</span>`)}<section class="stats-grid" aria-label="Your overview">${stats.join('')}</section>
-    ${featured ? `<section class="feature-banner"><div class="feature-copy"><span class="eyebrow">Featured quiz</span><h2>${e(featured.title)}</h2>${quizCreator(featured)}<p class="quiz-meta">${icon('clock')}${e(featured.timeLimitMinutes)} min</p><p class="subtitle">${isStudent() ? 'Choose your answers carefully and see how you do.' : 'A fresh challenge, ready for curious minds.'}</p>${btn((isStudent() ? 'Start quiz' : 'View quiz') + ' ' + icon('arrow'), isStudent() ? 'start' : 'manage-quiz', `data-id="${featured.id}"`)}</div><div class="feature-art" aria-hidden="true">${featureArt()}</div></section>` : `<section class="panel">${empty('Your next challenge is on its way', isStaff() ? 'Create a quiz, add questions, and publish it when it’s ready.' : 'Published quizzes will appear here.', isStaff() ? btn('Create a quiz ' + icon('plus'), 'new-quiz') : '')}</section>`}
-    <div class="dashboard-grid"><div class="stack"><section><div class="section-header"><h2>Published quizzes</h2><a class="text-link" href="#quizzes">View all ${icon('arrow')}</a></div><div class="panel quiz-list">${published.slice(0,4).map(q=>quizRow(q)).join('') || empty('No published quizzes yet')}</div></section>${isStudent() ? `<section><div class="section-header"><h2>Your attempts</h2><a class="text-link" href="#attempts">View all ${icon('arrow')}</a></div><div class="panel">${[...state.attempts].sort((a,b)=>asUtc(b.startedAt)-asUtc(a.startedAt)).slice(0,3).map(attemptRow).join('') || empty('A fresh start', 'Your quiz attempts will appear here.')}</div></section>` : `<section class="panel workspace-note"><span class="quiz-icon">${icon('edit')}</span><div><h3>Make something worth learning.</h3><p class="subtitle">Build questions, choose the right answers, and give your learners a new challenge.</p><a class="text-link" href="#manage">Manage your quizzes ${icon('arrow')}</a></div></section>`}</div><aside><div class="section-header"><h2>Leaderboard</h2></div>${boardPanel(published)}</aside></div>`;
+  const recent = [...state.attempts].sort((a,b) => asUtc(b.startedAt) - asUtc(a.startedAt) || b.id - a.id).slice(0,3);
+  const cards = published.slice(0,3).map(quiz => `<article class="quiz-card dashboard-quiz-card">
+    <div class="quiz-card-top"><span class="quiz-icon">${icon(quizIcon(quiz.title))}</span><span class="badge badge-success">Published</span></div>
+    <h2>${e(quiz.title)}</h2>
+    ${quizCreator(quiz)}
+    <p class="quiz-meta">${icon('clock')}${e(quiz.timeLimitMinutes)} minutes</p>
+    ${isStudent() ? quizProgress(quiz) : ''}
+    <div class="quiz-card-footer">${isStudent() ? studentQuizButton(quiz) : btn('View quiz ' + icon('arrow'), 'manage-quiz', `data-id="${quiz.id}"`)}</div>
+  </article>`).join('');
+
+  document.querySelector('#page').innerHTML = `<section class="dashboard-hero" aria-labelledby="dashboard-heading">
+    <div class="dashboard-hero-copy"><p class="eyebrow dashboard-welcome">Welcome back, ${e(state.profile.userName)}</p><h1 class="dashboard-heading" id="dashboard-heading">A little curiosity.<br>A world to discover.</h1><p class="subtitle">${isStudent() ? 'Choose a quiz and see where your knowledge takes you.' : 'Create a thoughtful challenge and give curious minds somewhere to start.'}</p><a class="btn btn-primary" href="#quizzes">Explore quizzes ${icon('arrow')}</a></div>
+    <div class="dashboard-hero-stats" aria-label="Your overview">${stats.join('')}</div>
+  </section>
+  <div class="dashboard-discovery">
+    <section class="dashboard-library"><div class="section-header"><h2>Choose your next quiz</h2><a class="text-link" href="#quizzes">View all ${icon('arrow')}</a></div><div class="dashboard-quiz-grid">${cards || empty('Your next challenge is on its way', isStaff() ? 'Create a quiz, add questions, and publish it when it’s ready.' : 'Published quizzes will appear here.', isStaff() ? btn('Create a quiz ' + icon('plus'), 'new-quiz') : '')}</div></section>
+    <aside class="dashboard-board"><div class="section-header"><h2>Leaderboard</h2><a class="text-link" href="#leaderboard">View all ${icon('arrow')}</a></div>${boardPanel(published)}</aside>
+  </div>
+  ${isStudent() ? `<section class="dashboard-recent"><div class="section-header"><h2>Recent attempts</h2><a class="text-link" href="#attempts">View all ${icon('arrow')}</a></div><div class="panel dashboard-recent-list">${recent.map(attemptRow).join('') || empty('A fresh start', 'Your quiz attempts will appear here.')}</div></section>` : `<section class="dashboard-recent"><div class="panel workspace-note"><span class="quiz-icon">${icon('edit')}</span><div><h3>Make something worth learning.</h3><p class="subtitle">Build questions, choose the right answers, and give your learners a new challenge.</p><a class="text-link" href="#manage">Manage your quizzes ${icon('arrow')}</a></div></div></section>`}`;
   loadBoard(published[0]?.id);
 }
 function quizzesPage() {
@@ -387,10 +437,7 @@ async function showRoute() {
   if ((['manage','edit','statistics'].includes(route) && !isStaff()) || (route==='admin'&&!hasRole('Admin')) || (['attempt','attempts','result'].includes(route)&&!isStudent())) { location.hash = 'dashboard'; return; }
   state.route = route;
   clearInterval(state.timer); state.timer = null;
-  document.body.classList.remove('menu-open');
-  const backdrop = document.querySelector('.sidebar-backdrop');
-  if (backdrop) backdrop.hidden = true;
-  document.querySelector('.mobile-topbar [data-action=mobile-menu]')?.setAttribute('aria-expanded', 'false');
+  setNavigationOpen(false);
   document.querySelectorAll('[data-route]').forEach(link=>{ const active=link.dataset.route===(['edit','statistics'].includes(route)?'manage':route==='attempt'||route==='result'?'attempts':route); if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current'); });
   document.querySelector('#page').innerHTML = '<div class="loading-state" role="status">Getting things ready…</div>';
   document.title = `${({dashboard:'Dashboard',quizzes:'Quizzes',attempts:'My attempts',leaderboard:'Leaderboard',manage:'Manage quizzes',edit:'Quiz editor',profile:'Profile',admin:'User roles',attempt:'Quiz in progress',statistics:'Statistics',result:'Your result'}[route]||'Dashboard')} · QuizMaster`;
@@ -664,13 +711,8 @@ async function performAction(action,button) {
   if(action==='theme'){toggleTheme();return;}
   if(action==='settings'){settingsDialog();return;}
   if(action==='close-modal'){modal.close();return;}
-  if(action==='sidebar'){
-    const collapsed=document.body.classList.toggle('sidebar-collapsed');
-    try{localStorage.setItem('quizmaster-sidebar',collapsed?'collapsed':'expanded');}catch{}
-    button.setAttribute('aria-expanded',String(!collapsed));button.setAttribute('aria-label',collapsed?'Expand sidebar':'Collapse sidebar');return;
-  }
   if(action==='mobile-menu'){
-    const open=document.body.classList.toggle('menu-open');document.querySelector('.sidebar-backdrop').hidden=!open;document.querySelector('.mobile-topbar [data-action=mobile-menu]')?.setAttribute('aria-expanded',String(open));return;
+    setNavigationOpen(!document.body.classList.contains('menu-open'), true);return;
   }
   if(action==='demo'){setDemo(true);location.hash='dashboard';await boot();return;}
     if (action === 'logout' || action === 'exit-demo') {
@@ -726,6 +768,8 @@ async function performAction(action,button) {
   if(action==='finish-expired'){finishDialog(id);return;}
 }
 document.addEventListener('click',async event=>{
+  const navLink=event.target.closest('.topbar a[href^="#"]');
+  if(navLink){const wasOpen=document.body.classList.contains('menu-open');setNavigationOpen(false);if(wasOpen)document.querySelector('.main-content')?.focus({preventScroll:true});}
   const authButton=event.target.closest('[data-auth]');
   if(authButton){event.preventDefault();renderAuth(authButton.dataset.auth);return;}
   const filter=event.target.closest('[data-filter]');
@@ -750,7 +794,8 @@ document.addEventListener('error',event=>{
   }
   if(image instanceof HTMLImageElement&&image.closest('.avatar'))image.parentElement.textContent=(state.profile?.userName||'Q').slice(0,1).toUpperCase();
 },true);
-document.addEventListener('keydown',event=>{if(event.key==='Escape'){document.body.classList.remove('menu-open');const backdrop=document.querySelector('.sidebar-backdrop');if(backdrop)backdrop.hidden=true;document.querySelector('.mobile-topbar [data-action=mobile-menu]')?.setAttribute('aria-expanded','false');}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('menu-open')){event.preventDefault();setNavigationOpen(false,true);}});
+window.addEventListener('resize',()=>{if(document.body.classList.contains('menu-open'))setNavigationOpen(false,true);});
 window.addEventListener('hashchange',()=>{if(state.profile)showRoute();else renderAuth(['register','verify'].includes(location.hash.slice(1))?location.hash.slice(1):'login');});
 window.addEventListener('quizmaster:unauthorized',()=>{state.profile=null;state.active=null;clearInterval(state.timer);if(modal.open)modal.close();renderAuth('login');toast('Your session ended. Please sign in again.','error');});
 window.addEventListener('beforeunload',event=>{if(state.active?.dirty.size){event.preventDefault();event.returnValue='';}});

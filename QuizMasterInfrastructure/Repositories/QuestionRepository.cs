@@ -21,17 +21,12 @@ namespace QuizMasterInfrastructure.Repositories
         }
         public async Task<Question?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
-            return await _context.Questions
-                .Include(q => q.AnswerOptions)
-                .FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
+            return await _context.Questions.Include(q => q.AnswerOptions).FirstOrDefaultAsync(q => q.Id == id, cancellationToken);
         }
 
         public async Task<ICollection<Question>> GetByQuizIdAsync(int quizId, CancellationToken cancellationToken = default)
         {
-            return await _context.Questions
-                .Where(q => q.QuizId == quizId)
-                .Include(q => q.AnswerOptions)
-                .ToListAsync(cancellationToken);
+            return await _context.Questions.Where(q => q.QuizId == quizId).Include(q => q.AnswerOptions).ToListAsync(cancellationToken);
         }
         public async Task AddAsync(Question question, CancellationToken cancellationToken = default)
         {

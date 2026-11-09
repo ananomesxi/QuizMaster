@@ -26,9 +26,7 @@ namespace QuizMasterInfrastructure.Repositories
         }
         public async Task<ICollection<AnswerOption>> GetByQuestionIdAsync(int questionId, CancellationToken cancellationToken = default)
         {
-            return await _context.AnswerOptions
-                .Where(a => a.QuestionId == questionId)
-                .ToListAsync(cancellationToken);
+            return await _context.AnswerOptions.Where(a => a.QuestionId == questionId).ToListAsync(cancellationToken);
         }
         public async Task AddAsync(AnswerOption answerOption, CancellationToken cancellationToken = default)
         {
