@@ -30,7 +30,6 @@ namespace QuizMasterWeb
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
-
             builder.Services.AddEndpointsApiExplorer();
 
             //swagger
@@ -59,9 +58,10 @@ namespace QuizMasterWeb
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
-            
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            /// add repositories and services
+
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IQuizRepository, QuizRepository>();
             builder.Services.AddScoped<IQuizResultRepository, QuizResultRepository>();
             builder.Services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
@@ -79,7 +79,7 @@ namespace QuizMasterWeb
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IAccountService, AccountService>();
-            ///
+           
             // identity:
             builder.Services.AddDataProtection();
             builder.Services
@@ -87,8 +87,8 @@ namespace QuizMasterWeb
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<QuizMasterDbContext>()
             .AddDefaultTokenProviders();
-
-            builder.Services.Configure<IdentityOptions>(options => // for email confirmation
+            // email confirmation
+            builder.Services.Configure<IdentityOptions>(options => 
             {
                 options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
             });
@@ -120,11 +120,7 @@ namespace QuizMasterWeb
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", builder
-                => builder.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                );
+                options.AddPolicy("AllowAll", builder=> builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
             });
 
             //file storage service

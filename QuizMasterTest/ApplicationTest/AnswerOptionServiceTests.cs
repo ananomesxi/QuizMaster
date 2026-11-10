@@ -41,11 +41,9 @@ namespace QuizMasterTest.ApplicationTest
             var option = CreateOption();
             SetUpQuestion();
 
-            _options.Setup(repo => repo.GetByQuestionIdAsync(option.QuestionId, Token))
-                .ReturnsAsync(new List<AnswerOption> { option });
+            _options.Setup(repo => repo.GetByQuestionIdAsync(option.QuestionId, Token)).ReturnsAsync(new List<AnswerOption> { option });
 
-            var result = Assert.Single(
-                await _service.GetByQuestionIdAsync(option.QuestionId, Token));
+            var result = Assert.Single(await _service.GetByQuestionIdAsync(option.QuestionId, Token));
 
             Assert.Equal(option.Id, result.Id);
             Assert.Equal(option.QuestionId, result.QuestionId);
@@ -57,8 +55,7 @@ namespace QuizMasterTest.ApplicationTest
         public async Task GetByIdAsync_ReturnsMatchingOption()
         {
             var option = CreateOption();
-            _options.Setup(repo => repo.GetByIdAsync(option.Id, Token))
-                .ReturnsAsync(option);
+            _options.Setup(repo => repo.GetByIdAsync(option.Id, Token)).ReturnsAsync(option);
 
             var result = await _service.GetByIdAsync(option.Id, Token);
 
@@ -70,11 +67,9 @@ namespace QuizMasterTest.ApplicationTest
         [Fact]
         public async Task GetByIdAsync_Throws_WhenOptionIsMissing()
         {
-            _options.Setup(repo => repo.GetByIdAsync(99, Token))
-                .ReturnsAsync((AnswerOption?)null);
+            _options.Setup(repo => repo.GetByIdAsync(99, Token)).ReturnsAsync((AnswerOption?)null);
 
-            await Assert.ThrowsAsync<KeyNotFoundException>(
-                () => _service.GetByIdAsync(99, Token));
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.GetByIdAsync(99, Token));
         }
 
         [Fact]
@@ -82,8 +77,7 @@ namespace QuizMasterTest.ApplicationTest
         {
             SetUpQuestion();
             SetUpQuiz();
-            _options.Setup(repo => repo.AddAsync(It.IsAny<AnswerOption>(), Token))
-                .Returns(Task.CompletedTask);
+            _options.Setup(repo => repo.AddAsync(It.IsAny<AnswerOption>(), Token)).Returns(Task.CompletedTask);
 
             var dto = new CreateAnswerOptionDto
             {
@@ -111,8 +105,7 @@ namespace QuizMasterTest.ApplicationTest
             var option = CreateOption();
             SetUpQuestion();
             SetUpQuiz();
-            _options.Setup(repo => repo.GetByIdAsync(option.Id, Token))
-                .ReturnsAsync(option);
+            _options.Setup(repo => repo.GetByIdAsync(option.Id, Token)).ReturnsAsync(option);
 
             var dto = new UpdateAnswerOptionDto
             {
@@ -135,8 +128,7 @@ namespace QuizMasterTest.ApplicationTest
             var option = CreateOption();
             SetUpQuestion();
             SetUpQuiz();
-            _options.Setup(repo => repo.GetByIdAsync(option.Id, Token))
-                .ReturnsAsync(option);
+            _options.Setup(repo => repo.GetByIdAsync(option.Id, Token)).ReturnsAsync(option);
 
             await _service.DeleteAsync(option.Id, Token);
 
